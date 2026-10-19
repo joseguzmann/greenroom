@@ -1,0 +1,18 @@
+# Personal data never goes to the repository: CV, transcripts, recordings, session reports.
+private/
+recordings/
+*.wav
+*.mp3
+*.webm
+.env
+.env.*
+!.env.example
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.DS_Store
