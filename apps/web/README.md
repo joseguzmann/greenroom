@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Greenroom — web
 
-## Getting Started
-
-First, run the development server:
+The frontend: pick a room, join the voice call, read the debrief. Next.js (App Router), React,
+TypeScript, Tailwind.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev     # http://localhost:3000
+pnpm lint
+pnpm build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture: feature-based
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Code is grouped by **what it does for the user**, not by what kind of file it is.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/            # routes only: thin pages that compose features
+├── features/
+│   ├── session-setup/   # pick a job posting and a persona
+│   ├── live-call/       # the voice call
+│   ├── report/          # the debrief after the call
+│   └── pitch-drill/     # timed pitch practice
+│       ├── components/  # UI for this feature
+│       ├── hooks/       # React adapters over model/
+│       ├── model/       # plain TypeScript: state, rules, state machines (no React)
+│       └── api/         # calls to the backend for this feature
+└── shared/
+    ├── ui/         # generic UI building blocks, no business logic
+    ├── api/        # API client (generated from the backend's OpenAPI schema) and fetch wrapper
+    └── lib/        # small generic utilities
+```
 
-## Learn More
+### Rules
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **`app/` only composes.** Routing, layouts and data loading live there; business logic does not.
+2. **Features never import from each other.** What two features need moves to `shared/`.
+   `shared/` never imports from `features/` or `app/`. ESLint enforces both.
+3. **Business logic is plain TypeScript in `model/`.** Hooks only connect it to React, so the
+   logic is testable without a browser and usable from Server Components, where hooks don't run.
+4. **Components render; they don't fetch.** Backend calls go through the feature's `api/`, which
+   uses the shared client.
+5. Inside a feature, import with relative paths; across folders, use the `@/` alias.
